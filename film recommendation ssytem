@@ -1,0 +1,29 @@
+import pandas as pd
+from sklearn.neighbors import NearestNeighbors
+
+# Load data
+movies_df = pd.read_csv('movies.csv')  # Assuming you have a CSV file with movie data
+ratings_df = pd.read_csv('ratings.csv')  # Assuming you have a CSV file with ratings data
+
+# Merge dataframes if necessary
+# ...
+
+# Create a user-item matrix
+user_item_matrix = ratings_df.pivot(index='userId', columns='movieId', values='rating').fillna(0)
+
+# Instantiate and fit the nearest neighbors model
+k = 5  # Number of neighbors to consider
+knn_model = NearestNeighbors(metric='cosine', algorithm='brute')
+knn_model.fit(user_item_matrix)
+
+# Recommend movies for a given movie
+def recommend_movies(movie_id):
+    distances, indices = knn_model.kneighbors(user_item_matrix.iloc[movie_id, :].values.reshape(1, -1), n_neighbors=k+1)
+    recommended_movies = []
+    for i in range(1, len(distances.flatten())):
+        recommended_movies.append(user_item_matrix.index[indices.flatten()[i]])
+    return recommended_movies
+
+# Example usage
+recommended_movies = recommend_movies(1)  # Recommend movies similar to movie with ID 1
+print(recommended_movies)
